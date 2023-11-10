@@ -1,0 +1,131 @@
+#include <string.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <stddef.h>
+#include <stdlib.h>
+#include <fcntl.h>
+
+size_t	ft_strlen(char *s)
+{
+	size_t	i;
+
+	i = 0;
+	while (s[i])
+		i++;
+	return (i);
+}
+
+char	*ft_strdup(char *s1)
+{
+	char	*cpy;
+	char	*save;
+	size_t	len;
+
+	len = ft_strlen(s1);
+	cpy = malloc(len + 1);
+	if (!cpy)
+		return (NULL);
+	save = cpy;
+	while (*s1)
+		*cpy++ = *s1++;
+	*cpy = '\0';
+	return (save);
+}
+
+char	*ft_strjoin(char *s1, char *s2)
+{
+	char	*save;
+	char	*out;
+
+	if (!s2)
+		return (NULL);
+    if (!s1)
+        s1 = "";
+	out = malloc(ft_strlen(s1) + ft_strlen(s2) + 1);
+	if (!out)
+		return (NULL);
+	save = out;
+	while (*s1)
+		*out++ = *s1++;
+	while (*s2)
+		*out++ = *s2++;
+	*out = '\0';
+	return (save);
+}
+char	*ft_strchr(const char *s, int c)
+{
+	if (c == '\0')
+		return ((char *)&s[ft_strlen(s)]);
+	while (*s)
+	{
+		if (*s == (char)c)
+			return ((char *)s);
+		s++;
+	}
+	return (NULL);
+}
+
+char *read_line(char *buffer)
+{
+    size_t i;
+
+    i = 0;
+    while (buffer[i] != '\0')
+    {
+        if (buffer[i] == '\n')
+            return (buffer);
+        i++;
+    }
+    return (NULL);   
+}
+
+char *get_next_line(int fd)
+{
+    size_t  i;
+    static char *buffer[BUFFER_SIZE + 1];
+    static char *reminder;
+    char *newline;
+    char *line;
+
+    i = read(fd, buffer, BUFFER_SIZE);
+    if (i <= 0)
+        return(NULL);
+    newline = (char *)buffer;
+    while (i > 0)
+    {
+        if (reminder)
+            newline = ft_strjoin(reminder, newline);
+        newline[ft_strlen(newline)] = '\0';
+        line = read_line (newline);
+        if (line)
+        {
+            reminder = ft_strchr(line, int '\n');
+            return (line);
+        }
+        else
+        reminder = newline;
+        i--;
+    }
+    return (get_next_line(fd));
+}
+
+int main ()
+{
+    char *x;
+    int fd;
+
+
+    fd = open("archivo.txt", O_RDONLY);
+    if (fd < 0) 
+    {
+        perror("Failed to open the file");
+        return 1;
+    }
+    while ((x = get_next_line(fd)))
+    {
+        printf("%s\n", x);
+        free (x);
+    }
+    close(fd);
+    return 0;
+}
